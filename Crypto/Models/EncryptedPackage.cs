@@ -6,15 +6,9 @@ namespace SecretVaultManager.Crypto.Models
     public class EncryptedPackage
     {
         [Key(0)]
-        public string Alg { get; set; } = "AES-256-GCM";
+        public AesHeader Header { get; set; }
 
         [Key(1)]
-        public int Version { get; set; } = 1;
-
-        [Key(2)]
-        public string DekId { get; set; } = "1";
-
-        [Key(3)]
-        public byte[] Encrypted { get; set; }
+        public byte[] Payload { get; set; }
     }
 }

@@ -84,7 +84,7 @@ namespace SecretVaultManager.Services
                 throw new ArgumentNullException(nameof(dto));
 
             ValidateSecretName(dto.Name);
-            ValidateSecretValue(dto.PlaintextValue);
+            ValidateSecretValue(dto.Value);
 
             // Check for duplicate name
             if (await _context.Secrets.AnyAsync(s => s.Name == dto.Name))
@@ -95,7 +95,7 @@ namespace SecretVaultManager.Services
             try
             {
                 // Encrypt the secret value
-                var plaintextBytes = Encoding.UTF8.GetBytes(dto.PlaintextValue);
+                var plaintextBytes = Encoding.UTF8.GetBytes(dto.Value);
                 var encryptedBytes = _encryptionService.EncryptSecret(plaintextBytes);
 
                 var secret = new Secret
@@ -143,10 +143,10 @@ namespace SecretVaultManager.Services
                 secret.Name = dto.Name;
             }
 
-            if (!string.IsNullOrEmpty(dto.PlaintextValue))
+            if (!string.IsNullOrEmpty(dto.Value))
             {
-                ValidateSecretValue(dto.PlaintextValue);
-                var plaintextBytes = Encoding.UTF8.GetBytes(dto.PlaintextValue);
+                ValidateSecretValue(dto.Value);
+                var plaintextBytes = Encoding.UTF8.GetBytes(dto.Value);
                 secret.Encrypted = _encryptionService.EncryptSecret(plaintextBytes);
             }
 
@@ -178,7 +178,7 @@ namespace SecretVaultManager.Services
                 {
                     Id = secret.Id,
                     Name = secret.Name,
-                    PlaintextValue = plaintextValue,
+                    Value = plaintextValue,
                     CreatedAt = secret.CreatedAt
                 };
             }

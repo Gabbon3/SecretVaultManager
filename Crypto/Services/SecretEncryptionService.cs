@@ -68,16 +68,24 @@ namespace SecretVaultManager.Crypto.Services
                 dekId ??= _keyManagementService.DefaultKeyId;
                 var dek = _keyManagementService.GetKey(dekId);
 
-                // Encrypt data
-                var encryptedBytes = AES256GCM.Encrypt(plaintext, dek);
-
-                // Create package with metadata
-                var package = new EncryptedPackage
+                // Create Package Header
+                var header = new AesHeader
                 {
                     Alg = SupportedAlgorithm,
                     Version = CurrentVersion,
                     DekId = dekId,
-                    Encrypted = encryptedBytes
+                };
+                // Aes AAD
+                var headerBytes = MessagePackSerializer.Serialize(header);
+
+                // Encrypt data
+                var encryptedBytes = AES256GCM.Encrypt(plaintext, dek, null, headerBytes);
+
+                // Create package with metadata
+                var package = new EncryptedPackage
+                {
+                    Header = header,
+                    Payload = encryptedBytes
                 };
 
                 // Serialize with MessagePack
@@ -104,17 +112,20 @@ namespace SecretVaultManager.Crypto.Services
                 var package = MessagePackSerializer.Deserialize<EncryptedPackage>(encryptedPackageBytes);
 
                 // Validate package
-                if (package.Alg != SupportedAlgorithm)
-                    throw new NotSupportedException($"Unsupported algorithm: {package.Alg}. Only {SupportedAlgorithm} is supported.");
+                if (package.Header.Alg != SupportedAlgorithm)
+                    throw new NotSupportedException($"Unsupported algorithm: {package.Header.Alg}. Only {SupportedAlgorithm} is supported.");
 
-                if (package.Version > CurrentVersion)
-                    throw new NotSupportedException($"Package version {package.Version} is not supported. Maximum supported version is {CurrentVersion}.");
+                if (package.Header.Version > CurrentVersion)
+                    throw new NotSupportedException($"Package version {package.Header.Version} is not supported. Maximum supported version is {CurrentVersion}.");
 
                 // Get the encryption key
-                var dek = _keyManagementService.GetKey(package.DekId);
+                var dek = _keyManagementService.GetKey(package.Header.DekId);
+
+                // Serialize Header (Aes AAD)
+                var headerBytes = MessagePackSerializer.Serialize(package.Header);
 
                 // Decrypt data
-                return AES256GCM.Decrypt(package.Encrypted, dek);
+                return AES256GCM.Decrypt(package.Payload, dek, headerBytes);
             }
             catch (MessagePackSerializationException ex)
             {

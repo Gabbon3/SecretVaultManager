@@ -15,8 +15,18 @@ namespace SecretVaultManager.Crypto.Symmetric
         /// <param name="plaintext">Data to encrypt</param>
         /// <param name="key">Encryption key (must be 32 bytes for AES-256)</param>
         /// <param name="nonce">Optional nonce (if null, generates a random one)</param>
+        /// <param name="aad">Optional Additional Authenticated Data</param>
         /// <returns>Combined byte array of [nonce, encryptedData, authTag]</returns>
-        public static byte[] Encrypt(byte[] plaintext, byte[] key, byte[] nonce = null)
+        /// <example>
+        /// Encrypting with AAD (Additional Authenticated Data):
+        /// <code>
+        /// byte[] key = AES256GCM.GenerateKey();
+        /// byte[] data = Encoding.UTF8.GetBytes("Sensitive data");
+        /// byte[] aad = Encoding.UTF8.GetBytes("Contextual metadata");
+        /// byte[] encrypted = AES256GCM.Encrypt(data, key, null, aad);
+        /// </code>
+        /// </example>
+        public static byte[] Encrypt(byte[] plaintext, byte[] key, byte[] nonce = null, byte[] aad = null)
         {
             if (key == null || key.Length != 32)
                 throw new ArgumentException("Key must be 32 bytes for AES-256", nameof(key));
@@ -32,7 +42,7 @@ namespace SecretVaultManager.Crypto.Symmetric
 
             using (var aesGcm = new AesGcm(key, TagSize))
             {
-                aesGcm.Encrypt(nonce, plaintext, ciphertext, tag);
+                aesGcm.Encrypt(nonce, plaintext, ciphertext, tag, aad);
             }
 
             // Combine nonce, encrypted data and tag into single array
@@ -49,8 +59,19 @@ namespace SecretVaultManager.Crypto.Symmetric
         /// </summary>
         /// <param name="ciphertextWithMetadata">Combined byte array of [nonce, encryptedData, authTag]</param>
         /// <param name="key">Encryption key (must be 32 bytes for AES-256)</param>
+        /// <param name="aad">Optional Additional Authenticated Data</param>
         /// <returns>Decrypted data</returns>
-        public static byte[] Decrypt(byte[] ciphertextWithMetadata, byte[] key)
+        /// <example>
+        /// Decrypting with AAD (Additional Authenticated Data):
+        /// <code>
+        /// byte[] key = ...; // Stessa chiave usata per l'encrypt
+        /// byte[] encryptedData = ...; // Dati cifrati (con nonce e tag inclusi)
+        /// byte[] aad = Encoding.UTF8.GetBytes("Metadata123"); // Deve essere lo stesso usato in Encrypt
+        /// byte[] decrypted = AES256GCM.Decrypt(encryptedData, key, aad);
+        /// string originalMessage = Encoding.UTF8.GetString(decrypted);
+        /// </code>
+        /// </example>
+        public static byte[] Decrypt(byte[] ciphertextWithMetadata, byte[] key, byte[] aad = null)
         {
             if (key == null || key.Length != 32)
                 throw new ArgumentException("Key must be 32 bytes for AES-256", nameof(key));
@@ -71,7 +92,7 @@ namespace SecretVaultManager.Crypto.Symmetric
 
             using (var aesGcm = new AesGcm(key, TagSize))
             {
-                aesGcm.Decrypt(nonce, ciphertext, tag, plaintext);
+                aesGcm.Decrypt(nonce, ciphertext, tag, plaintext, aad);
             }
 
             return plaintext;

@@ -8,5 +8,6 @@ namespace SecretVaultManager.Data
         public SecretsVaultManagerDb(DbContextOptions<SecretsVaultManagerDb> options) : base(options) { }
 
         public DbSet<Secret> Secrets { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }

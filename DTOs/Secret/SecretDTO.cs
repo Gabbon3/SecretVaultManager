@@ -5,7 +5,7 @@ namespace SecretVaultManager.DTOs.Secret
     public class CreateSecretDto
     {
         public string Name { get; set; } = null!;
-        public string PlaintextValue { get; set; } = null!;
+        public string Value { get; set; } = null!;
     }
 
     public class UpdateSecretDto
@@ -13,7 +13,7 @@ namespace SecretVaultManager.DTOs.Secret
         [StringLength(100, MinimumLength = 1)]
         public string? Name { get; set; }
 
-        public string? PlaintextValue { get; set; }
+        public string? Value { get; set; }
     }
 
     public class SecretDto
@@ -26,6 +26,6 @@ namespace SecretVaultManager.DTOs.Secret
 
     public class DecryptedSecretDto : SecretDto
     {
-        public string PlaintextValue { get; set; } = null!;
+        public string Value { get; set; } = null!;
     }
 }

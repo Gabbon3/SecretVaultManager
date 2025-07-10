@@ -26,7 +26,6 @@ namespace SecretVaultManager.Crypto.Services
 
     public class KeyManagementService : IKeyManagementService
     {
-        private const string ConfigRoot = "Crypto";
         private readonly Dictionary<string, byte[]> _keys;
         private readonly string _defaultKeyId;
 
